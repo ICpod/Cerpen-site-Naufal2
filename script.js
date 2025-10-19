@@ -1,53 +1,37 @@
-async function findPDF() {
-  try {
-    const response = await fetch('myfile/');
-    const text = await response.text();
-    const parser = new DOMParser();
-    const html = parser.parseFromString(text, 'text/html');
-    const links = html.querySelectorAll('a');
-    for (let link of links) {
-      if (link.href.endsWith('.pdf')) return 'myfile/' + link.textContent;
-    }
-  } catch (e) {
-    console.error("Could not find PDF:", e);
-  }
-  return null;
-}
-
-async function loadPDF(pdfPath) {
+$(document).ready(async function() {
   const flipbook = $('#flipbook');
-  flipbook.html('');
 
-  // Use the built-in browser renderer via <embed>
-  const embed = document.createElement('embed');
-  embed.src = pdfPath + '#view=FitH';
-  embed.type = 'application/pdf';
-  embed.style.width = '100%';
-  embed.style.height = '100%';
-  embed.style.border = 'none';
-  embed.style.borderRadius = '12px';
-  
-  // Create 1-page placeholder and use flip effect
-  const pageDiv = document.createElement('div');
-  pageDiv.classList.add('page');
-  pageDiv.appendChild(embed);
-  flipbook.append(pageDiv);
+  // Try to load all image files in /myfile/
+  const images = [];
+  for (let i = 1; i <= 70; i++) { // support up to 50 pages
+    const imgPath = `myfile/page${i}.jpg`;
+    const res = await fetch(imgPath);
+    if (res.ok) images.push(imgPath);
+    else break;
+  }
 
+  if (images.length === 0) {
+    flipbook.html('<p style="padding:40px;">No images found. Please put page1.jpg, page2.jpg, etc. inside myfile/.</p>');
+    return;
+  }
+
+  // Create pages
+  for (const src of images) {
+    flipbook.append(`<div class="page"><img src="${src}" draggable="false"></div>`);
+  }
+
+  // Initialize Turn.js flipbook
   flipbook.turn({
     width: 900,
     height: 600,
     autoCenter: true,
     gradients: true,
-    duration: 1000
+    acceleration: true,
+    duration: 1000,
+    elevation: 50
   });
 
+  // Button controls
   $('#prevBtn').click(() => flipbook.turn('previous'));
   $('#nextBtn').click(() => flipbook.turn('next'));
-}
-
-(async () => {
-  const pdf = 'myfile/book.pdf';
-
-  if (pdf) loadPDF(pdf);
-  else alert("Put a PDF file inside the 'myfile' folder first.");
-})();
+});
