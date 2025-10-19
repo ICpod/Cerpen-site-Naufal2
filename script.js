@@ -46,7 +46,8 @@ async function loadPDF(pdfPath) {
 }
 
 (async () => {
-  const pdf = await findPDF();
+  const pdf = 'myfile/book.pdf';
+
   if (pdf) loadPDF(pdf);
   else alert("Put a PDF file inside the 'myfile' folder first.");
 })();
